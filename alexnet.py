@@ -23,25 +23,28 @@ def weights_init(m):
 			init.constant(m.bias, 0.0)
 
 
-def train(outpath, nepochs, device):
-	trans = transforms.Resize((224,224))
+def train(opt):
+	trans = transforms.Resize((224,224)) #Needs to be 224
 	data =  LeafSnapLoader(transform=trans)
-	loader = torch.utils.data.DataLoader(data, batch_size=32, shuffle=True, num_workers=4)	
+	loader = torch.utils.data.DataLoader(data, batch_size=opt.batchsize, shuffle=True, num_workers=4)	
 
 	network = models.alexnet(pretrained=False, num_classes=185)
-	network.apply(weights_init)
-	network = network.to(device)
+	if opt.loadfrom != '':
+		network.load_state_dict(torch.load(opt.loadfrom))
+	else:
+		network.apply(weights_init)
+	network = network.to(opt.device)
 
-	optimizer = optim.Adam(network.parameters(), lr=0.002, betas=(0.5,0.999))
+	optimizer = optim.Adam(network.parameters(), lr=opt.lr, betas=(opt.beta1,opt.beta2))
 	lossfunc = nn.CrossEntropyLoss()
 
-	for epoch in range(nepochs):
+	for epoch in range(opt.nepochs):
 		print("Epoch",epoch)
 		for i, data in enumerate(loader):
 			labels = data['species_index']
 			ims = data['image']
-			device_labels = labels.to(device)
-			device_ims = ims.to(device)
+			device_labels = labels.to(opt.device)
+			device_ims = ims.to(opt.device)
 
 			network.zero_grad()
 			predictions = network(device_ims)
@@ -49,7 +52,7 @@ def train(outpath, nepochs, device):
 			loss.backward()
 			optimizer.step()
 
-			if i%10 == 0:
+			if i%100 == 0:
 				_, maxinds = predictions.to('cpu').max(1)
 				correct = torch.sum(maxinds == labels).item()
 				total = predictions.size(0)
@@ -58,7 +61,7 @@ def train(outpath, nepochs, device):
 				print("Epoch {0}, batch {1}, batch_loss={2}, batch_accuracy={3}".format(
 					epoch,i,loss.item(),accuracy))
 
-	torch.save(network.state_dict(), outpath)
+	torch.save(network.state_dict(), opt.outpath)
 
 
 
@@ -67,10 +70,15 @@ def train(outpath, nepochs, device):
 
 if __name__=='__main__':
 	parser = argparse.ArgumentParser()
-	parser.add_argument('--outpath', required=True, help='Where to save the trained model')
+	parser.add_argument('--outpath', default='./models/alexnet.pth', help='Where to save the trained model')
 	parser.add_argument('--nepochs', type=int, default=5, help='Number of training epochs')
 	parser.add_argument('--device', default='cpu', help='Device to train on: cpu | cuda:0 | cuda:1 | ... | cuda:N')
+	parser.add_argument('--batchsize', type=int, default=32, help='batch size')
+	parser.add_argument('--lr', type=float, default=0.002, help='learning rate')
+	parser.add_argument('--beta1', type=float, default=0.5, help='Adam parameter beta1')
+	parser.add_argument('--beta2', type=float, default=0.999, help='Adam parameter beta2')
+	parser.add_argument('--loadfrom', default='', help='Path to pre-existing model')
 	opt = parser.parse_args()
 
-	train(opt.outpath, opt.nepochs, opt.device)
+	train(opt)
 
