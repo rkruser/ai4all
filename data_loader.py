@@ -4,12 +4,37 @@ from torch.utils.data import Dataset, DataLoader
 from torchvision import transforms, utils
 from PIL import Image
 
+# Read a class file and transform between class label and string
+class ClassLoader(object):
+	def __init__(self, class_file='./leafsnap-dataset/classes.txt'):
+		with open(class_file, 'r') as f:
+			self.classes = f.read().splitlines()
+		for i,c in enumerate(self.classes):
+			self.classes[i] = c.replace('_',' ')
+
+		self.string2index = {c:i for i,c in enumerate(self.classes)}
+		self.index2string = {i:c for i,c in enumerate(self.classes)}
+
+	def str2ind(self, s):
+		return self.string2index[s]
+
+	def ind2str(self, i):
+		return self.index2string[i]
+
+
+
+
 class LeafSnapLoader(Dataset):
-	def __init__(self,csv_file='./leafsnap-dataset/leafsnap-dataset-images.txt',leafsnap_root='./leafsnap-dataset', source=['lab','field'],transform=None):
+	def __init__(self,csv_file='./leafsnap-dataset/leafsnap-dataset-images.txt',
+		leafsnap_root='./leafsnap-dataset', 
+		source=['lab','field'],
+		class_file='./leafsnap-dataset/classes.txt',
+		transform=None):
 		self.leafsnap_root = leafsnap_root
 		self.transform = transform
 		self.frames = pd.read_csv(csv_file,sep='\t')
 		self.frames = self.frames.loc[self.frames['source'].isin(source)]
+		self.classes = ClassLoader(class_file)
 		
 		self.pil2tensor = transforms.ToTensor()
 		
@@ -22,6 +47,10 @@ class LeafSnapLoader(Dataset):
 		segmented_path = self.frames.iloc[idx,2]
 		species = self.frames.iloc[idx,3]
 		source = self.frames.iloc[idx,4]
+
+		species_index = self.classes.str2ind(species.lower())
+		# The .lower() is necessary because pytorch feels the need to capitalize its classes automatically
+		# It also replaces underscores with spaces automatically, hence the .replace() in ClassLoader
 		
 		
 		image = Image.open(self.leafsnap_root + '/' + image_path)
@@ -34,7 +63,7 @@ class LeafSnapLoader(Dataset):
 		image = self.pil2tensor(image)
 		segmented = self.pil2tensor(segmented)
 		
-		sample = {'file_id': file_id, 'species': species,
+		sample = {'file_id': file_id, 'species': species, 'species_index': species_index,
 		'source': source, 'image': image, 'segmented': segmented}
 		
 		return sample
@@ -49,6 +78,7 @@ if __name__ == '__main__':
 	sample = iterator.next()
 	print(sample['file_id'])
 	print(sample['species'])
+	print(sample['species_index'])
 	print(sample['source'])
 	print(sample['image'].shape)
 	print(sample['segmented'].shape)
