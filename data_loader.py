@@ -9,8 +9,8 @@ class ClassLoader(object):
 	def __init__(self, class_file='./leafsnap-dataset/classes.txt'):
 		with open(class_file, 'r') as f:
 			self.classes = f.read().splitlines()
-		for i,c in enumerate(self.classes):
-			self.classes[i] = c.replace('_',' ')
+#		for i,c in enumerate(self.classes):
+#			self.classes[i] = c.replace('_',' ')
 
 		self.string2index = {c:i for i,c in enumerate(self.classes)}
 		self.index2string = {i:c for i,c in enumerate(self.classes)}
@@ -48,9 +48,9 @@ class LeafSnapLoader(Dataset):
 		species = self.frames.iloc[idx,3]
 		source = self.frames.iloc[idx,4]
 
-		species_index = self.classes.str2ind(species.lower())
+		species_index = self.classes.str2ind(species.replace(' ', '_').lower())
 		# The .lower() is necessary because pytorch feels the need to capitalize its classes automatically
-		# It also replaces underscores with spaces automatically, hence the .replace() in ClassLoader
+		# It also replaces underscores with spaces automatically, hence the .replace()
 		
 		
 		image = Image.open(self.leafsnap_root + '/' + image_path)
@@ -73,7 +73,7 @@ class LeafSnapLoader(Dataset):
 if __name__ == '__main__':
 	trans = transforms.Resize((256,256)) #use tranforms.Compose to add cropping etc.
 	data =  LeafSnapLoader(transform=trans)
-	loader = torch.utils.data.DataLoader(data, batch_size=5, shuffle=True, num_workers=4)
+	loader = torch.utils.data.DataLoader(data, batch_size=200, shuffle=True, num_workers=4)
 	iterator=loader.__iter__()
 	sample = iterator.next()
 	print(sample['file_id'])
