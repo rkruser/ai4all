@@ -7,6 +7,7 @@ import torch.nn as nn
 import torch.nn.init as init
 
 
+# I copy-pasted this from somewhere else. Not sure if this is a good init procedure -Ryen
 def weights_init(m):
 	classname = m.__class__.__name__
 	if classname.find('Conv') != -1:
@@ -68,7 +69,7 @@ if __name__=='__main__':
 	parser = argparse.ArgumentParser()
 	parser.add_argument('--outpath', required=True, help='Where to save the trained model')
 	parser.add_argument('--nepochs', type=int, default=5, help='Number of training epochs')
-	parser.add_argument('--device', default='cpu', help='Device to train on')
+	parser.add_argument('--device', default='cpu', help='Device to train on: cpu | cuda:0 | cuda:1 | ... | cuda:N')
 	opt = parser.parse_args()
 
 	train(opt.outpath, opt.nepochs, opt.device)
