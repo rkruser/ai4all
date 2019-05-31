@@ -49,8 +49,8 @@ class LeafSnapLoader(Dataset):
 		source = self.frames.iloc[idx,4]
 
 		species_index = self.classes.str2ind(species.replace(' ', '_').lower())
-		# The .lower() is necessary because pytorch feels the need to capitalize its classes automatically
-		# It also replaces underscores with spaces automatically, hence the .replace()
+		# The .lower() and .replace() are necessary because in the leafsnap-dataset-images.txt file
+		# the species names is capitalized and has a space instead of an underscore
 		
 		
 		image = Image.open(self.leafsnap_root + '/' + image_path)
