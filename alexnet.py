@@ -6,6 +6,22 @@ import argparse
 import torch.nn as nn
 import torch.nn.init as init
 
+class AverageMeter(object):
+	def __init__(self):
+		self.count = 0
+		self.value = 0
+
+	def update(self, value):
+		self.value += value
+		self.count += 1
+
+	def average(self):
+		return self.value / self.count
+
+	def reset(self):
+		self.count = 0
+		self.value = 0
+
 
 # I copy-pasted this from somewhere else. Not sure if this is a good init procedure -Ryen
 def weights_init(m):
@@ -25,8 +41,8 @@ def weights_init(m):
 
 def train(opt):
 	trans = transforms.Resize((224,224)) #Needs to be 224
-	data =  LeafSnapLoader(transform=trans)
-	loader = torch.utils.data.DataLoader(data, batch_size=opt.batchsize, shuffle=True, num_workers=4)	
+	dataset =  LeafSnapLoader(transform=trans)
+	loader = torch.utils.data.DataLoader(dataset, batch_size=opt.batchsize, shuffle=True, num_workers=4)	
 
 	network = models.alexnet(pretrained=False, num_classes=185)
 	if opt.loadfrom != '':
@@ -38,28 +54,43 @@ def train(opt):
 	optimizer = optim.Adam(network.parameters(), lr=opt.lr, betas=(opt.beta1,opt.beta2))
 	lossfunc = nn.CrossEntropyLoss()
 
+
+	accuracyMeter = AverageMeter()
+	lossMeter = AverageMeter()
+
 	for epoch in range(opt.nepochs):
-		print("Epoch",epoch)
+		accuracyMeter.reset()
+		lossMeter.reset()
 		for i, data in enumerate(loader):
+			# Extract training batches
 			labels = data['species_index']
 			ims = data['image']
 			device_labels = labels.to(opt.device)
 			device_ims = ims.to(opt.device)
 
+			# Train network
 			network.zero_grad()
 			predictions = network(device_ims)
 			loss = lossfunc(predictions, device_labels)
 			loss.backward()
 			optimizer.step()
 
-			if i%100 == 0:
-				_, maxinds = predictions.to('cpu').max(1)
-				correct = torch.sum(maxinds == labels).item()
-				total = predictions.size(0)
-				accuracy = correct/total
+			# Compute statistics
+			_, maxinds = predictions.max(1)
+			maxinds = maxinds.to('cpu')
+			correct = torch.sum(maxinds == labels).item()
+			batch_size = predictions.size(0)
+			accuracy = correct/batch_size
+			accuracyMeter.update(accuracy)
+			lossMeter.update(loss.item())
 
+			if i%100 == 0:
 				print("Epoch {0}, batch {1}, batch_loss={2}, batch_accuracy={3}".format(
 					epoch,i,loss.item(),accuracy))
+		print("==================================")
+		print("Epoch {0}, average batch loss: {1}, average batch accuracy: {2}".format(epoch, 
+			 lossMeter.average(), accuracyMeter.average()))
+		print("==================================")
 
 	torch.save(network.state_dict(), opt.outpath)
 

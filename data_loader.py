@@ -6,7 +6,7 @@ from PIL import Image
 
 # Read a class file and transform between class label and string
 class ClassLoader(object):
-	def __init__(self, class_file='./leafsnap-dataset/classes.txt'):
+	def __init__(self, class_file='./classes.txt'):
 		with open(class_file, 'r') as f:
 			self.classes = f.read().splitlines()
 #		for i,c in enumerate(self.classes):
@@ -28,7 +28,7 @@ class LeafSnapLoader(Dataset):
 	def __init__(self,csv_file='./leafsnap-dataset/leafsnap-dataset-images.txt',
 		leafsnap_root='./leafsnap-dataset', 
 		source=['lab','field'],
-		class_file='./leafsnap-dataset/classes.txt',
+		class_file='./classes.txt',
 		transform=None):
 		self.leafsnap_root = leafsnap_root
 		self.transform = transform
