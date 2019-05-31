@@ -58,6 +58,8 @@ def train(opt):
 	accuracyMeter = AverageMeter()
 	lossMeter = AverageMeter()
 
+	# Added network.train(), network.test()? 
+
 	for epoch in range(opt.nepochs):
 		accuracyMeter.reset()
 		lossMeter.reset()
