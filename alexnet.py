@@ -105,7 +105,8 @@ if __name__=='__main__':
 	parser.add_argument('--nepochs', type=int, default=5, help='Number of training epochs')
 	parser.add_argument('--device', default='cpu', help='Device to train on: cpu | cuda:0 | cuda:1 | ... | cuda:N')
 	parser.add_argument('--batchsize', type=int, default=32, help='batch size')
-	parser.add_argument('--lr', type=float, default=0.002, help='learning rate')
+	parser.add_argument('--lr', type=float, default=0.0002, help='learning rate')
+	# 0.0002 works much better than the Adam default lr of 0.001
 	parser.add_argument('--beta1', type=float, default=0.5, help='Adam parameter beta1')
 	parser.add_argument('--beta2', type=float, default=0.999, help='Adam parameter beta2')
 	parser.add_argument('--loadfrom', default='', help='Path to pre-existing model')

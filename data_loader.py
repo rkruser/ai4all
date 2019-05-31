@@ -51,6 +51,7 @@ class LeafSnapLoader(Dataset):
 		species_index = self.classes.str2ind(species.replace(' ', '_').lower())
 		# The .lower() and .replace() are necessary because in the leafsnap-dataset-images.txt file
 		# the species names is capitalized and has a space instead of an underscore
+		# To do: add class id to the leafsnap-dataset-images.txt file
 		
 		
 		image = Image.open(self.leafsnap_root + '/' + image_path)
