@@ -11,9 +11,9 @@ class AverageMeter(object):
 		self.count = 0
 		self.value = 0
 
-	def update(self, value):
+	def update(self, value, count=1):
 		self.value += value
-		self.count += 1
+		self.count += count
 
 	def average(self):
 		return self.value / self.count
@@ -80,11 +80,11 @@ def train(opt):
 			maxinds = maxinds.to('cpu')
 			correct = torch.sum(maxinds == labels).item()
 			batch_size = predictions.size(0)
-			accuracy = correct/batch_size
-			accuracyMeter.update(accuracy)
+			accuracyMeter.update(correct, batch_size)
 			lossMeter.update(loss.item())
 
 			if i%100 == 0:
+				accuracy = correct/batch_size
 				print("Epoch {0}, batch {1}, batch_loss={2}, batch_accuracy={3}".format(
 					epoch,i,loss.item(),accuracy))
 		print("==================================")
