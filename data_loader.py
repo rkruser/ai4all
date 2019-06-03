@@ -25,16 +25,28 @@ class ClassLoader(object):
 
 
 class LeafSnapLoader(Dataset):
-	def __init__(self,csv_file='./leafsnap-dataset/leafsnap-dataset-images.txt',
+	def __init__(self,csv_file='./leafsnap-dataset/leafsnap-dataset-images-augmented.txt',
 		leafsnap_root='./leafsnap-dataset', 
 		source=['lab','field'],
-		class_file='./classes.txt',
+#		class_file='./classes.txt',
+		mode='train', # train | val | test | all
 		transform=None):
 		self.leafsnap_root = leafsnap_root
 		self.transform = transform
 		self.frames = pd.read_csv(csv_file,sep='\t')
 		self.frames = self.frames.loc[self.frames['source'].isin(source)]
-		self.classes = ClassLoader(class_file)
+		if mode == 'train':
+			self.frames = self.frames.loc[self.frames['train']==1]
+		elif mode == 'val':
+			self.frames = self.frames.loc[self.frames['val']==1]
+		elif mode == 'test':
+			self.frames = self.frames.loc[self.frames['test']==1]
+		else:
+			print("Using all data")
+		# If none of the above, just keep everything
+
+
+#		self.classes = ClassLoader(class_file)
 		
 		self.pil2tensor = transforms.ToTensor()
 		
@@ -47,8 +59,9 @@ class LeafSnapLoader(Dataset):
 		segmented_path = self.frames.iloc[idx,2]
 		species = self.frames.iloc[idx,3]
 		source = self.frames.iloc[idx,4]
+		species_index = self.frames.iloc[idx,5]
 
-		species_index = self.classes.str2ind(species.replace(' ', '_').lower())
+		# species_index = self.classes.str2ind(species.replace(' ', '_').lower())
 		# The .lower() and .replace() are necessary because in the leafsnap-dataset-images.txt file
 		# the species names is capitalized and has a space instead of an underscore
 		# To do: add class id to the leafsnap-dataset-images.txt file
@@ -73,8 +86,9 @@ class LeafSnapLoader(Dataset):
 #test
 if __name__ == '__main__':
 	trans = transforms.Resize((224,224)) #use tranforms.Compose to add cropping etc.
-	data =  LeafSnapLoader(transform=trans)
-	loader = torch.utils.data.DataLoader(data, batch_size=5, shuffle=True, num_workers=4)
+	data =  LeafSnapLoader(mode='train', transform=trans)
+	loader = torch.utils.data.DataLoader(data, batch_size=1, shuffle=True, num_workers=4)
+	print("Num batches:", len(loader))
 	iterator=loader.__iter__()
 	sample = iterator.next()
 	print(sample['file_id'])
@@ -87,11 +101,11 @@ if __name__ == '__main__':
 	segmented = sample['segmented']
 	im = images[0,:,:,:]
 	seg = segmented[0,:,:,:]
-	
+
 	toPIL = transforms.ToPILImage()
 	im = toPIL(im)
 	seg = toPIL(seg)
-	
+
 	im.show()
 	seg.show()
 	
