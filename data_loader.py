@@ -25,7 +25,7 @@ class ClassLoader(object):
 
 
 class LeafSnapLoader(Dataset):
-	def __init__(self,csv_file='./leafsnap-dataset/leafsnap-dataset-images-augmented.txt',
+	def __init__(self,csv_file='./leafsnap-dataset-images-augmented.txt',
 		leafsnap_root='./leafsnap-dataset', 
 		source=['lab','field'],
 #		class_file='./classes.txt',

@@ -44,7 +44,7 @@ classes = ClassLoader()
 register_df['species_index'] = register_df['species'].apply(classes.str2ind)
 
 # Save to file
-register_df.to_csv('./leafsnap-dataset/leafsnap-dataset-images-augmented.txt', sep='\t', index=False)
+register_df.to_csv('./leafsnap-dataset-images-augmented.txt', sep='\t', index=False)
 
 
 print(register_df[['species','train','val','test']].groupby('species').sum())
