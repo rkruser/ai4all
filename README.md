@@ -11,7 +11,6 @@ To train a new alexnet model:
 python alexnet.py --outpath [path/for/saving/model.pth] --device [cpu | cuda:0 | cuda:1 | ... cuda:N] --loadfrom [/path/to/existing/model.pth] --nepochs [epochs to train for] --batchsize [size] --lr [learning rate] > path/to/log.txt
 
 To test on new images:
-
 Download or take images, then run
 
 python test_on_new.py --loadfrom [path/to/trained/model.pth] --folder [optional/path/to/folder/of/images] --image [optional/path/to/single/image]
