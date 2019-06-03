@@ -1,11 +1,11 @@
-## AI4ALL project
+# AI4ALL project
 
-# To do
+## To do
 - Try more pics from outside leafsnap (the models do well on leafsnap but not so well outside it)
 - Try out data augmentation and other improvements
 - Create a concrete list of student deliverables
 
-
+## Help
 To train a new alexnet model:
 python alexnet.py --outpath [path/for/saving/model.pth] --device [cpu | cuda:0 | cuda:1 | ... cuda:N] --loadfrom [/path/to/existing/model.pth] --nepochs [epochs to train for] --batchsize [size] --lr [learning rate] > path/to/log.txt
 
