@@ -72,7 +72,7 @@ class LeafSnapLoader(Dataset):
 
 #test
 if __name__ == '__main__':
-	trans = transforms.Resize((256,256)) #use tranforms.Compose to add cropping etc.
+	trans = transforms.Resize((224,224)) #use tranforms.Compose to add cropping etc.
 	data =  LeafSnapLoader(transform=trans)
 	loader = torch.utils.data.DataLoader(data, batch_size=5, shuffle=True, num_workers=4)
 	iterator=loader.__iter__()
