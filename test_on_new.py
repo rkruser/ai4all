@@ -38,7 +38,7 @@ if opt.folder != '':
 	for i, data in enumerate(loader):
 		image = data['image']
 		file = data['file'][0]
-		func.to_pil_image(image.squeeze()).show(title=file) #visualize the image #title doesn't work
+#		func.to_pil_image(image.squeeze()).show(title=file) #visualize the image #title doesn't work
 		result = network(image).squeeze()
 		_, arg = torch.max(result,0)
 		arg = arg.item()
