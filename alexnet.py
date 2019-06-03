@@ -5,6 +5,7 @@ import torch.optim as optim
 import argparse
 import torch.nn as nn
 import torch.nn.init as init
+import os
 
 class AverageMeter(object):
 	def __init__(self):
@@ -41,8 +42,12 @@ def weights_init(m):
 
 def train(opt):
 	trans = transforms.Resize((224,224)) #Needs to be 224
-	dataset =  LeafSnapLoader(transform=trans)
-	loader = torch.utils.data.DataLoader(dataset, batch_size=opt.batchsize, shuffle=True, num_workers=4)	
+	dataset_train =  LeafSnapLoader(mode='train', transform=trans)
+	dataset_val = LeafSnapLoader(mode='val', transform=trans)
+	dataset_test = LeafSnapLoader(mode='test', transform=trans)
+	trainloader = torch.utils.data.DataLoader(dataset_train, batch_size=opt.batchsize, shuffle=True, num_workers=4)	
+	valloader = torch.utils.data.DataLoader(dataset_val, batch_size=opt.batchsize, shuffle=True, num_workers=4)
+	testloader = torch.utils.data.DataLoader(dataset_test, batch_size=opt.batchsize, shuffle=True, num_workers=4)
 
 	network = models.alexnet(pretrained=False, num_classes=185)
 	if opt.loadfrom != '':
@@ -54,16 +59,24 @@ def train(opt):
 	optimizer = optim.Adam(network.parameters(), lr=opt.lr, betas=(opt.beta1,opt.beta2))
 	lossfunc = nn.CrossEntropyLoss()
 
+	# For saving later
+	nameprefix, extension = os.path.splitext(opt.outpath)
 
 	accuracyMeter = AverageMeter()
 	lossMeter = AverageMeter()
+	valAccuracyMeter = AverageMeter()
+	valLossMeter = AverageMeter()
+	prevLoss = 1000000 # Just a large number
 
 	# Added network.train(), network.test()? 
 
 	for epoch in range(opt.nepochs):
 		accuracyMeter.reset()
 		lossMeter.reset()
-		for i, data in enumerate(loader):
+		valAccuracyMeter.reset()
+		valLossMeter.reset()
+		network.train()
+		for i, data in enumerate(trainloader):
 			# Extract training batches
 			labels = data['species_index']
 			ims = data['image']
@@ -87,12 +100,59 @@ def train(opt):
 
 			if i%100 == 0:
 				accuracy = correct/batch_size
-				print("Epoch {0}, batch {1}, batch_loss={2}, batch_accuracy={3}".format(
+				print("batch {1}, batch_loss={2}, batch_accuracy={3}".format(
 					epoch,i,loss.item(),accuracy))
+
+		# Validate on held-out data
+		network.eval()
+		for i, data in enumerate(valloader):
+			labels = data['species_index']
+			ims = data['image']
+			device_labels = labels.to(opt.device)
+			device_ims = ims.to(opt.device)
+
+			predictions = network(device_ims)
+			loss = lossfunc(predictions, device_labels)
+
+			_, maxinds = predictions.max(1)
+			maxinds = maxinds.to('cpu')
+			correct = torch.sum(maxinds == labels).item()
+			batch_size = predictions.size(0)
+			valAccuracyMeter.update(correct, batch_size)
+			valLossMeter.update(loss.item())
+
+
 		print("==================================")
-		print("Epoch {0}, average batch loss: {1}, average batch accuracy: {2}".format(epoch, 
-			 lossMeter.average(), accuracyMeter.average()))
+		print("Epoch {0}, average train batch loss: {1}, average train batch accuracy: {2}\n  average validation loss: {3}, average validation accuracy: {4}".format(
+			epoch, lossMeter.average(), accuracyMeter.average(), valLossMeter.average(), valAccuracyMeter.average()))
 		print("==================================")
+
+		if valLossMeter.average() < prevLoss:
+			prevLoss = valLossMeter.average()
+			print("Saving best current model")
+			torch.save(network.state_dict(), nameprefix+'_best'+extension)
+
+
+	# Evaluate on held-out test
+	testAccuracyMeter = AverageMeter()
+	testLossMeter = AverageMeter()
+	network.eval()
+	for i, data in enumerate(testloader):
+		labels = data['species_index']
+		ims = data['image']
+		device_labels = labels.to(opt.device)
+		device_ims = ims.to(opt.device)
+
+		predictions = network(device_ims)
+		loss = lossfunc(predictions, device_labels)
+
+		_, maxinds = predictions.max(1)
+		maxinds = maxinds.to('cpu')
+		correct = torch.sum(maxinds == labels).item()
+		batch_size = predictions.size(0)
+		testAccuracyMeter.update(correct, batch_size)
+		testLossMeter.update(loss.item())
+	print("Average test batch loss: {0}, Test accuracy: {1}".format(testLossMeter.average(), testAccuracyMeter.average()))
 
 	torch.save(network.state_dict(), opt.outpath)
 
