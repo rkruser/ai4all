@@ -15,6 +15,6 @@ classes.sort()
 print(classes)
 
 if opt.classfile != '':
-	with open(opt.classfile, 'w') as f:
-		for c in classes:
-			f.write("{}\n".format(c))
+    with open(opt.classfile, 'w') as f:
+        for c in classes:
+            f.write("{}\n".format(c))

@@ -20,7 +20,7 @@ test_p = 1-(train_p + val_p)
 
 # Stratify into train/validation/test
 train_inds, valtest_inds, _, valtest_targets = train_test_split(indices, targets,
-	stratify=targets, train_size=train_p)
+    stratify=targets, train_size=train_p)
 validation_inds, test_inds = train_test_split(valtest_inds, stratify=valtest_targets, test_size=test_p/(val_p+test_p))
 
 train_select = np.zeros(npts, dtype='int')
