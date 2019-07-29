@@ -46,12 +46,48 @@ class Your_Network(nn.Module):
     def __init__(self):
         super(Your_Network, self).__init__() # Initialize superclass
         # Your network layers here
+        self.c1 = nn.conv2d(3,64,5,stride = 1)
         
+        self.c2 = nn.conv2d(64,128,5,stride = 2)
+        
+        self.c3 = nn.conv2d(128,256,3,stride = 1)
+        
+        self.c4 = nn.conv2d(256,256,3,stride = 2)
+        
+        self.c5 = nn.conv2d(256,256,3, stride = 2)
+        
+        self.c6 = nn.conv2d(256,256,3, stride = 2)
+        
+        self.c7 = nn.conv2d(256,256,5, stride = 2)
+        
+        self.c8 = nn.Linear(6400,512)
+        
+        self.c9 = nn.Linear(512,185)
         
     def forward(self, x):
-        pass
         # Erase the word "pass" and place your code here
+        x = self.c1(x)
+        x = F.relu(x)
+        x = self.c2(x)
+        x = F.relu(x)
+        x = self.c3(x)
+        x = F.relu(x)
+        x = self.c4(x)
+        x = F.relu(x)
+        x = self.c5(x)
+        x = F.relu(x)
+        x = self.c6(x)
+        x = F.relu(x)
+        x = self.c7(x)
         
+        # batchsize x 256 x 5 x 5
+        x = F.relu(x)
+        x = x.view(x.size(0), -1) # reshapes to batchsize x 6400
+        
+        x = self.c8(x)
+        x = F.relu(x)
+        x = self.c9(x)
+        return x
         # The last output layer should have a tensor shape of batch_size x 185
         #  This should be the result of an nn.Linear layer
         #  Do not use a nonlinearity on the last layer
