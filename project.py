@@ -63,7 +63,7 @@ def train_network():
     training_options = {
         'learning_rate': 0.0002,
         'training_epochs': 10,
-        'batch_size': 128,
+        'batch_size': 64,
         'adam_beta_1': 0.5,
         'adam_beta_2': 0.999,
         'save_path': './models/your_network.pth',        
