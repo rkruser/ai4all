@@ -12,6 +12,7 @@ import torch.optim as optim
 import torch.nn as nn
 import torch.nn.init as init
 import os
+import pickle
 
 class AverageMeter(object):
     def __init__(self):
@@ -52,15 +53,16 @@ def train(network, opt):
     nepochs = opt['training_epochs']
     data_source = opt['data_source']
     printEvery = opt['printEvery']
+    workers = opt['workers']
     
     
     dataset_train =  LeafSnapLoader(mode='train', transform=image_transform, source=data_source)
     dataset_val = LeafSnapLoader(mode='val', transform=image_transform, source=data_source)
     dataset_test = LeafSnapLoader(mode='test', transform=image_transform, source=data_source)
     
-    trainloader = torch.utils.data.DataLoader(dataset_train, batch_size=opt['batch_size'], shuffle=True, num_workers=0) 
-    valloader = torch.utils.data.DataLoader(dataset_val, batch_size=opt['batch_size'], shuffle=True, num_workers=0)
-    testloader = torch.utils.data.DataLoader(dataset_test, batch_size=opt['batch_size'], shuffle=True, num_workers=0)
+    trainloader = torch.utils.data.DataLoader(dataset_train, batch_size=opt['batch_size'], shuffle=True, num_workers=workers) 
+    valloader = torch.utils.data.DataLoader(dataset_val, batch_size=opt['batch_size'], shuffle=True, num_workers=workers)
+    testloader = torch.utils.data.DataLoader(dataset_test, batch_size=opt['batch_size'], shuffle=True, num_workers=workers)
 
     # network = models.alexnet(pretrained=False, num_classes=185)
     if opt['continue_training_from'] is not None:
@@ -80,6 +82,11 @@ def train(network, opt):
     valAccuracyMeter = AverageMeter()
     valLossMeter = AverageMeter()
     prevLoss = 1000000 # Just a large number
+    
+    train_accs = []
+    val_accs = []
+    train_losses = []
+    val_losses = []
 
     # Added network.train(), network.test()? 
 
@@ -139,6 +146,13 @@ def train(network, opt):
         print("Epoch {0}, train batch loss: {1}, train batch accuracy: {2}\n validation loss: {3}, validation accuracy: {4}".format(
             epoch, lossMeter.average(), accuracyMeter.average(), valLossMeter.average(), valAccuracyMeter.average()))
         print("==================================")
+
+        train_accs.append(accuracyMeter.average())
+        val_accs.append(valAccuracyMeter.average())
+        train_losses.append(lossMeter.average())
+        val_losses.append(valLossMeter.average())
+        with open(nameprefix+'_savedvalues.pkl', 'wb') as fp:
+            pickle.dump((train_accs, train_losses, val_accs, val_losses), fp)
 
         if valLossMeter.average() < prevLoss:
             prevLoss = valLossMeter.average()

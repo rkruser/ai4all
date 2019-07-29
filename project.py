@@ -13,6 +13,7 @@ import torch.nn as nn
 
 from train_test import train
 from test_on_new import test_on_new
+import argparse
 
 '''
 For the Leafsnap project:
@@ -47,19 +48,19 @@ class Your_Network(nn.Module):
     def __init__(self):
         super(Your_Network, self).__init__() # Initialize superclass
         # Your network layers here
-        self.c1 = nn.conv2d(3,64,5,stride = 1)
+        self.c1 = nn.Conv2d(3,64,5,stride = 1)
         
-        self.c2 = nn.conv2d(64,128,5,stride = 2)
+        self.c2 = nn.Conv2d(64,128,5,stride = 2)
         
-        self.c3 = nn.conv2d(128,256,3,stride = 1)
+        self.c3 = nn.Conv2d(128,256,3,stride = 1)
         
-        self.c4 = nn.conv2d(256,256,3,stride = 2)
+        self.c4 = nn.Conv2d(256,256,3,stride = 2)
         
-        self.c5 = nn.conv2d(256,256,3, stride = 2)
+        self.c5 = nn.Conv2d(256,256,3, stride = 2)
         
-        self.c6 = nn.conv2d(256,256,3, stride = 2)
+        self.c6 = nn.Conv2d(256,256,3, stride = 2)
         
-        self.c7 = nn.conv2d(256,256,3, stride = 2)
+        self.c7 = nn.Conv2d(256,256,3, stride = 2)
         
         self.c8 = nn.Linear(6400,512)
         
@@ -95,15 +96,20 @@ class Your_Network(nn.Module):
 
 
 
-def train_network():
+def train_network(use_alexnet = False, gpuid=0):
     # Adjust the training options as necessary
+    if use_alexnet:
+        print("Using alexnet")
+    else:
+        print("Using custom network")
+        
     training_options = {
         'learning_rate': 0.0002,
-        'training_epochs': 10,
+        'training_epochs': 100,
         'batch_size': 64,
         'adam_beta_1': 0.5,
         'adam_beta_2': 0.999,
-        'save_path': './models/your_network.pth',        
+        'save_path': './models/alex.pth' if use_alexnet else './models/your_network.pth',        
         'continue_training_from': None, #Path to a saved neural net model
         'image_transform': transforms.Compose([
                     transforms.Resize((224,224)), #Make sure size matches model input size
@@ -113,12 +119,16 @@ def train_network():
                     #   for more transforms
                 ]),
         'data_source': ['lab', 'field'], # Whether to train on data from the lab or the field, or both
-        'device': 'cuda:0' if torch.cuda.is_available() else 'cpu',
-        'printEvery': 1 #How often to print batch summaries
+        'device': 'cuda:'+str(gpuid) if torch.cuda.is_available() else 'cpu',
+        'printEvery': 10, #How often to print batch summaries
+        'workers': 4
     }
-
-    #network = models.alexnet(pretrained=False, num_classes=185)
-    network = Your_Network()
+    print(training_options)
+    
+    if use_alexnet:
+        network = models.alexnet(pretrained=False, num_classes=185)
+    else:
+        network = Your_Network()
     train(network, training_options)
 
 
@@ -133,8 +143,15 @@ def test_network():
     test_on_new(network, test_on_new_options)
 
 
-train_network()
-#test_network()
+if __name__=='__main__':
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--use_alexnet', action='store_true')
+    parser.add_argument('--gpuid', type=int, default=0)
+    opt = parser.parse_args()
+    print(opt)
+    
+    train_network(opt.use_alexnet, opt.gpuid)
+    #test_network()
 
 
 
