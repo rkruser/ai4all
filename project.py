@@ -63,7 +63,7 @@ def train_network():
     training_options = {
         'learning_rate': 0.0002,
         'training_epochs': 10,
-        'batch_size': 64,
+        'batch_size': 128,
         'adam_beta_1': 0.5,
         'adam_beta_2': 0.999,
         'save_path': './models/your_network.pth',        
@@ -77,11 +77,11 @@ def train_network():
                 ]),
         'data_source': ['lab', 'field'], # Whether to train on data from the lab or the field, or both
         'device': 'cuda:0' if torch.cuda.is_available() else 'cpu',
-        'printEvery': 10 #How often to print batch summaries
+        'printEvery': 1 #How often to print batch summaries
     }
 
-    #network = models.alexnet(pretrained=False, num_classes=185)
-    network = Your_Network()
+    network = models.alexnet(pretrained=False, num_classes=185)
+    #network = Your_Network()
     train(network, training_options)
 
 

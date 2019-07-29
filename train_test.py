@@ -113,8 +113,8 @@ def train(network, opt):
 
             if i%printEvery == 0:
                 accuracy = correct/batch_size
-                print("batch {1}, batch_loss={2}, batch_accuracy={3}".format(
-                    epoch,i,loss.item(),accuracy))
+                print("batch {1} of {4}, batch_loss={2}, batch_accuracy={3}".format(
+                    epoch,i,loss.item(),accuracy, len(trainloader)))
 
         # Validate on held-out data
         network.eval()
@@ -136,7 +136,7 @@ def train(network, opt):
 
 
         print("==================================")
-        print("Epoch {0}, average train batch loss: {1}, average train batch accuracy: {2}\n  average validation loss: {3}, average validation accuracy: {4}".format(
+        print("Epoch {0}, train batch loss: {1}, train batch accuracy: {2}\n validation loss: {3}, validation accuracy: {4}".format(
             epoch, lossMeter.average(), accuracyMeter.average(), valLossMeter.average(), valAccuracyMeter.average()))
         print("==================================")
 
