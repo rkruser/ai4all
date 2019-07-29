@@ -39,11 +39,11 @@ def weights_init(m):
         m.weight.data.normal_(1.0, 0.01)
         m.bias.data.fill_(0)
     elif classname.find('Linear') != -1:
-        init.normal(m.weight, std=1e-2)
+        init.normal_(m.weight, std=1e-2)
         # init.orthogonal(m.weight)
         #init.xavier_uniform(m.weight, gain=1.4)
         if m.bias is not None:
-            init.constant(m.bias, 0.0)
+            init.constant_(m.bias, 0.0)
 
 
 def train(network, opt):
@@ -58,9 +58,9 @@ def train(network, opt):
     dataset_val = LeafSnapLoader(mode='val', transform=image_transform, source=data_source)
     dataset_test = LeafSnapLoader(mode='test', transform=image_transform, source=data_source)
     
-    trainloader = torch.utils.data.DataLoader(dataset_train, batch_size=opt['batch_size'], shuffle=True, num_workers=1) 
-    valloader = torch.utils.data.DataLoader(dataset_val, batch_size=opt['batch_size'], shuffle=True, num_workers=1)
-    testloader = torch.utils.data.DataLoader(dataset_test, batch_size=opt['batch_size'], shuffle=True, num_workers=1)
+    trainloader = torch.utils.data.DataLoader(dataset_train, batch_size=opt['batch_size'], shuffle=True, num_workers=0) 
+    valloader = torch.utils.data.DataLoader(dataset_val, batch_size=opt['batch_size'], shuffle=True, num_workers=0)
+    testloader = torch.utils.data.DataLoader(dataset_test, batch_size=opt['batch_size'], shuffle=True, num_workers=0)
 
     # network = models.alexnet(pretrained=False, num_classes=185)
     if opt['continue_training_from'] is not None:
