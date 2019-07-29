@@ -3,6 +3,7 @@
 
 import torch
 from torchvision import transforms, utils, models
+import torch.nn.functional as F
 #from data_loader import LeafSnapLoader
 #import torch.optim as optim
 #import argparse
@@ -58,7 +59,7 @@ class Your_Network(nn.Module):
         
         self.c6 = nn.conv2d(256,256,3, stride = 2)
         
-        self.c7 = nn.conv2d(256,256,5, stride = 2)
+        self.c7 = nn.conv2d(256,256,3, stride = 2)
         
         self.c8 = nn.Linear(6400,512)
         
@@ -116,8 +117,8 @@ def train_network():
         'printEvery': 1 #How often to print batch summaries
     }
 
-    network = models.alexnet(pretrained=False, num_classes=185)
-    #network = Your_Network()
+    #network = models.alexnet(pretrained=False, num_classes=185)
+    network = Your_Network()
     train(network, training_options)
 
 
