@@ -1,9 +1,8 @@
 # AI4ALL project
 
-## To do
-- Try more pics from outside leafsnap (the models do well on leafsnap but not so well outside it)
-- Try out data augmentation and other improvements
-- Create a concrete list of student deliverables
+## Students:
+Edit and run project.py to train your own networks on leafsnap
+Follow the commented instructions in the file
 
 ## Help
 To train a new alexnet model:
