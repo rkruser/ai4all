@@ -8,11 +8,18 @@ import torch
 #from torchvision import transforms, utils, models
 from data_loader import LeafSnapLoader
 import torch.optim as optim
+import torchvision.transforms.functional as F
+import torchvision.utils as utils
 #import argparse
 import torch.nn as nn
 import torch.nn.init as init
 import os
 import pickle
+import PIL
+#from PIL import Image
+
+from data_loader import ClassLoader
+
 
 class AverageMeter(object):
     def __init__(self):
@@ -182,6 +189,91 @@ def train(network, opt):
     print("Average test batch loss: {0}, Test accuracy: {1}".format(testLossMeter.average(), testAccuracyMeter.average()))
 
     torch.save(network.state_dict(), nameprefix+'_epochs_'+str(nepochs)+extension)
+
+
+def test(network, opt):
+    workers = opt['workers']
+    image_transform = opt['image_transform']
+    data_source = opt['data_source']
+    device = opt['device']
+    show_batches = opt['show_batches'] #list of batches to show
+    
+    dataset_test = LeafSnapLoader(mode='test', transform=image_transform, source=data_source)
+    testloader = torch.utils.data.DataLoader(dataset_test, batch_size=opt['batch_size'], shuffle=True, num_workers=workers)
+    classes = ClassLoader()
+    
+    
+    network.load_state_dict(torch.load(opt['load_from']))
+    network = network.to(device)
+    
+    lossfunc = nn.CrossEntropyLoss()
+
+    testAccuracyMeter = AverageMeter()
+    testLossMeter = AverageMeter()
+    network.eval()
+    for i, data in enumerate(testloader):
+        labels = data['species_index']
+        ims = data['image']
+        device_labels = labels.to(device)
+        device_ims = ims.to(device)
+
+        predictions = network(device_ims)
+        loss = lossfunc(predictions, device_labels)
+
+        _, maxinds = predictions.max(1)
+        maxinds = maxinds.to('cpu')
+        correct = torch.sum(maxinds == labels).item()
+        batch_size = predictions.size(0)
+        testAccuracyMeter.update(correct, batch_size)
+        testLossMeter.update(loss.item())
+        
+        if i in show_batches:
+            print_ims = utils.make_grid(ims, nrow=4)
+            #print_image = F.to_pil_image(print_ims)
+            utils.save_image(print_ims, './test_ims.png')
+            #print_image.show()
+            
+            for im_idx in range(len(maxinds)):
+                arg = maxinds[im_idx].item()
+                print("Index: {0}, classification: {1}, true class: {2}, source: {3}".format( 
+                      arg, 
+                      classes.ind2str(arg),
+                      classes.ind2str(labels[im_idx].item()),
+                      data['source'][im_idx]
+                      ))
+                
+            
+        
+    print("Average test batch loss: {0}, Test accuracy: {1}".format(testLossMeter.average(), testAccuracyMeter.average()))    
+
+
+def visualize_conv_layers(conv_layer, file_name):
+    weights = conv_layer.weight.data
+    print(weights.size())
+    #weights = weights.permute(1,0,2,3)
+    if weights.size(1) > 3:
+        weights = weights.mean(1).unsqueeze(1)
+    
+    print_ims = utils.make_grid(weights, nrow=16, normalize=True, scale_each=False)
+    print_image = F.to_pil_image(print_ims)
+    print_image = F.resize(print_image, 512, interpolation=PIL.Image.NEAREST)
+    #utils.save_image(print_ims, file_name)
+    print_image.save(file_name)
+    print_image.show()
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

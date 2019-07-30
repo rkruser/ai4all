@@ -4,6 +4,7 @@ import torch
 from torchvision import models, datasets, transforms
 #import argparse
 import torchvision.transforms.functional as func
+import torchvision.utils as utils
 from PIL import Image
 from data_loader import ClassLoader
 
@@ -44,14 +45,20 @@ def test_on_new(network, opt):
     #   iterator=loader.__iter__()
     #   sample = iterator.next()    
     #   print(sample)
+        allIms = []
         for i, data in enumerate(loader):
             image = data['image']
+            allIms.append(image)
             file = data['file'][0]
     #       func.to_pil_image(image.squeeze()).show(title=file) #visualize the image #title doesn't work
             result = network(image).squeeze()
             _, arg = torch.max(result,0)
             arg = arg.item()
             print("File: {0}, Index: {1}, Classification: {2}".format(file, arg, classes.ind2str(arg).replace('_',' ')))
+        imBatch = torch.cat(allIms)
+        printIms = utils.make_grid(imBatch)
+        utils.save_image(printIms, './collected_images.png')
+        
     
     elif image != '':
         image = Image.open(image)

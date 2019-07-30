@@ -11,7 +11,7 @@ import torch.nn as nn
 #import torch.nn.init as init
 #import os
 
-from train_test import train
+from train_test import train, test, visualize_conv_layers
 from test_on_new import test_on_new
 import argparse
 
@@ -121,7 +121,7 @@ def train_network(use_alexnet = False, gpuid=0):
         'data_source': ['lab', 'field'], # Whether to train on data from the lab or the field, or both
         'device': 'cuda:'+str(gpuid) if torch.cuda.is_available() else 'cpu',
         'printEvery': 10, #How often to print batch summaries
-        'workers': 4
+        'workers': 0
     }
     print(training_options)
     
@@ -130,17 +130,44 @@ def train_network(use_alexnet = False, gpuid=0):
     else:
         network = Your_Network()
     train(network, training_options)
+    
+
+def test_network_on_testset(use_alexnet=False, gpuid=0):
+    network = Your_Network()
+    #network = models.alexnet(pretrained=False, num_classes=185)
+    testing_options = {
+        'batch_size': 16,       
+        'load_from': './models/your_network_epochs_100.pth', #Path to a saved neural net model
+        'image_transform': transforms.Compose([
+                    transforms.Resize((224,224)), #Make sure size matches model input size
+                    # transforms.Pad(0),
+                    # transforms.CenterCrop(224)
+                    # See https://pytorch.org/docs/stable/torchvision/transforms.html
+                    #   for more transforms
+                ]),
+        'data_source': ['field'], # Whether to train on data from the lab or the field, or both
+        'device': 'cuda:'+str(gpuid) if torch.cuda.is_available() else 'cpu',
+        'workers': 0,
+        'show_batches': [0]
+    }
+    test(network, testing_options)
 
 
-def test_network():
-    #network = Your_Network()
-    network = models.alexnet(pretrained=False, num_classes=185)
-    network.load_state_dict(torch.load('./models/alexnet_100.pth'))
+def test_network_on_new():
+    network = Your_Network()
+    #network = models.alexnet(pretrained=False, num_classes=185)
+    network.load_state_dict(torch.load('./models/your_network_epochs_100.pth'))
     test_on_new_options = {
         'folder': './pics',
-        'image': None        
+        'image': None
     }
     test_on_new(network, test_on_new_options)
+    
+def visualize_network():
+    network = Your_Network()
+    #network = models.alexnet(pretrained=False, num_classes=185)
+    #network.load_state_dict(torch.load('./models/your_network_epochs_100.pth')) 
+    visualize_conv_layers(network.c4, 'c4_random.png')
 
 
 if __name__=='__main__':
@@ -150,9 +177,10 @@ if __name__=='__main__':
     opt = parser.parse_args()
     print(opt)
     
-    train_network(opt.use_alexnet, opt.gpuid)
-    #test_network()
-
+    #train_network(opt.use_alexnet, opt.gpuid)
+    #test_network_on_new()
+    #test_network_on_testset()
+    #visualize_network()
 
 
 
