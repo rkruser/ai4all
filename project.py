@@ -168,6 +168,13 @@ def visualize_network():
     #network = models.alexnet(pretrained=False, num_classes=185)
     #network.load_state_dict(torch.load('./models/your_network_epochs_100.pth')) 
     visualize_conv_layers(network.c4, 'c4_random.png')
+    
+def to_cpu():
+    network = Your_Network()
+    #network = models.alexnet(pretrained=False, num_classes=185)
+    network.load_state_dict(torch.load('./models/your_network_epochs_100.pth'))
+    network = network.to('cpu')
+    torch.save(network.state_dict(), './models/your_net_cpu.pth')
 
 
 if __name__=='__main__':
@@ -181,6 +188,7 @@ if __name__=='__main__':
     #test_network_on_new()
     #test_network_on_testset()
     #visualize_network()
+    to_cpu()
 
 
 
